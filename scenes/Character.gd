@@ -1,11 +1,13 @@
 extends Node2D
 
+class_name Character
+
 enum State {
 	IDLE,
 	FOLLOW_PATH,
 }
 
-const MAX_SPEED = 50
+var MAX_SPEED = 50
 var state = State.IDLE
 var path_offset
 var speed = MAX_SPEED

@@ -93,10 +93,10 @@ func is_close_to_walls(pos : Vector2, radius : float):
 
 func _on_Bg_button_up():
 	var mouse_pos = get_global_mouse_position()
-	var path = compute_path($PlayableCharacter.position, mouse_pos, false)
+	var path = compute_path($Player.position, mouse_pos, false)
 	if path == null:
 		return
-	$PlayableCharacter.set_path(path)
+	$Player.set_path(path)
 	if Global.DEBUG:
 		update()
 
@@ -137,6 +137,9 @@ func compute_path(from : Vector2, to : Vector2, add_noise : bool):
 			to_point_idx_test -= 1
 		from_point_idx += 1
 	
+	### often times, points at indexes 1 and -2 can be moved along x or y axis for a better path
+	# TODO
+	
 	## add some noise
 	assert(not add_noise) # not supported yet, TODO for enemies
 	
@@ -144,7 +147,7 @@ func compute_path(from : Vector2, to : Vector2, add_noise : bool):
 
 func _draw():
 	if Global.DEBUG:
-		draw_polyline($PlayableCharacter/Path2D.curve.get_baked_points(), Color.aquamarine, 5, true)
+		draw_polyline($Player/Path2D.curve.get_baked_points(), Color.aquamarine, 5, true)
 		for grid_segment in grid_segments:
 			var point_idx = grid_segment[0]
 			var other_point_idx = grid_segment[1]
