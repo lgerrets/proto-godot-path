@@ -43,6 +43,8 @@ func _ready():
 			grid_x += GRID_RES
 		prev_line_idxes = curr_line_idxes
 		grid_y += GRID_RES
+		
+		# spawn enemies
 
 func is_point_in_walls(pos : Vector2):
 	var space = get_world_2d().get_direct_space_state()
