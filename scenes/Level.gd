@@ -45,6 +45,7 @@ func _ready():
 		grid_y += GRID_RES
 		
 		# spawn enemies
+	
 
 func is_point_in_walls(pos : Vector2):
 	var space = get_world_2d().get_direct_space_state()
@@ -87,13 +88,20 @@ func is_close_to_walls(pos : Vector2, radius : float):
 	return false
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
-#func _process(delta):
-#	pass
+func _process(delta):
+	update_enemies_path()
 
+func update_enemies_path():
+	for enemy in $Enemies.get_children():
+		var path = compute_path(enemy.get_node("KinematicBody2D").position, $Player/KinematicBody2D.position, false)
+#		$Player/KinematicBody2D.global_position
+		if path == null:
+			continue
+		enemy.set_path(path) # TODO do we really want to do this every step ?
 
 func _on_Bg_button_up():
 	var mouse_pos = get_global_mouse_position()
-	var path = compute_path($Player.position, mouse_pos, false)
+	var path = compute_path($Player/KinematicBody2D.position, mouse_pos, false)
 	if path == null:
 		return
 	$Player.set_path(path)
@@ -111,8 +119,8 @@ func compute_path(from : Vector2, to : Vector2, add_noise : bool):
 	var path = a_star.get_point_path(a_star_from_id, a_star_to_id)
 	if a_star_from_id != a_star_to_id:
 		assert(len(path) > 0)
-	path.insert(0, from)
-	path.append(to)
+	path.insert(0, Vector2(from))
+	path.append(Vector2(to))
 	
 	### remove intermediate points by bisections
 #	var from_point_idx = 0

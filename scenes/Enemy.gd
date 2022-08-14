@@ -1,10 +1,14 @@
 extends Character
-# original scene > inherit scene > click on child root node > "inherit script"
-# alternatively : in parent.gd declare class_name Parent, then here extend Parent
+
+
+# Declare member variables here. Examples:
+# var a = 2
+# var b = "text"
+
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
-	MASS = 2
+	pass # Replace with function body.
 
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
