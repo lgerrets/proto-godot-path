@@ -1,5 +1,8 @@
 extends Node2D
 
+onready var example_player = $Player
+onready var example_enemy = $Enemies/Enemy
+
 var a_star : AStar2D
 const GRID_RES = 32
 
@@ -7,6 +10,12 @@ var grid_segments = []
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
+	var max_radius = 0
+	var temp_radius
+	for character in [example_player, example_enemy]:
+		temp_radius = character.get_node("KinematicBody2D/CollisionShape2D").shape.radius
+		max_radius = max(temp_radius, max_radius)
+	
 	a_star = AStar2D.new()
 	var prev_line_idxes = null
 	var grid_y = $Layout/Start.position.y
@@ -18,26 +27,25 @@ func _ready():
 			var point_idx = a_star.get_available_point_id()
 			var weight_scale = 1 # must be >= 1 ; we could use this param to simulate speed buff/debuff AoE
 			var pos = Vector2(grid_x, grid_y)
-			if is_close_to_walls(pos, 1):
-				point_idx = null
-			else:
-				a_star.add_point(point_idx, pos, weight_scale)
-				var other_point_idx
-				if len(curr_line_idxes) > 0:
-					other_point_idx = curr_line_idxes[-1]
-					if other_point_idx != null:
-						a_star.connect_points(point_idx, other_point_idx)
-						grid_segments.append([point_idx, other_point_idx])
-				if prev_line_idxes != null:
+			var other_point_idx
+			a_star.add_point(point_idx, pos, weight_scale)
+			if (len(curr_line_idxes) > 0) and not does_circle_collide_during_motion(pos, Vector2(- GRID_RES, 0), max_radius):
+				other_point_idx = curr_line_idxes[-1]
+				a_star.connect_points(point_idx, other_point_idx)
+				grid_segments.append([point_idx, other_point_idx])
+			if (prev_line_idxes != null):
+				if not does_circle_collide_during_motion(pos, Vector2(0, - GRID_RES), max_radius):
 					other_point_idx = prev_line_idxes[grid_x_idx]
-					if other_point_idx != null:
-						a_star.connect_points(point_idx, other_point_idx)
-						grid_segments.append([point_idx, other_point_idx])
-	#				if len(curr_line_idxes) > 0:
-	#					other_point_idx = prev_line_idxes[grid_x_idx-1]
-	#					if not is_line_in_walls(pos, a_star.get_point_position(other_point_idx)):
-	#						a_star.connect_points(point_idx, other_point_idx)
-	#						grid_segments.append([point_idx, other_point_idx])
+					a_star.connect_points(point_idx, other_point_idx)
+					grid_segments.append([point_idx, other_point_idx])
+				if (len(curr_line_idxes) > 0) and not does_circle_collide_during_motion(pos, Vector2(- GRID_RES, - GRID_RES), max_radius):
+					other_point_idx = prev_line_idxes[grid_x_idx-1]
+					a_star.connect_points(point_idx, other_point_idx)
+					grid_segments.append([point_idx, other_point_idx])
+				if (len(curr_line_idxes) < len(prev_line_idxes) - 1) and not does_circle_collide_during_motion(pos, Vector2(GRID_RES, - GRID_RES), max_radius):
+					other_point_idx = prev_line_idxes[grid_x_idx+1]
+					a_star.connect_points(point_idx, other_point_idx)
+					grid_segments.append([point_idx, other_point_idx])
 			curr_line_idxes.append(point_idx)
 			grid_x_idx += 1
 			grid_x += GRID_RES
@@ -46,6 +54,12 @@ func _ready():
 		
 		# spawn enemies
 	
+	spawn_enemies()
+	update_enemies_path()
+
+func spawn_enemies():
+	for enemy in $Enemies.get_children():
+		enemy.connect("update_path", self, "update_enemy_path")
 
 func is_point_in_walls(pos : Vector2):
 	var space = get_world_2d().get_direct_space_state()
@@ -87,17 +101,36 @@ func is_close_to_walls(pos : Vector2, radius : float):
 			return true
 	return false
 
+func does_circle_collide_during_motion(pos : Vector2, motion : Vector2, radius : float):
+	var space = get_world_2d().get_direct_space_state()
+	var query = Physics2DShapeQueryParameters.new()
+	var circle_shape = CircleShape2D.new()
+	circle_shape.radius = radius
+	query.transform.origin = pos
+	query.set_shape(circle_shape)
+	query.motion = motion
+	var results = space.intersect_shape(query, 32)
+	
+	for result in results:
+		var collider = result["collider"]
+		if collider in $Layout/Walls.get_children():
+			return true
+	return false
+
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta):
-	update_enemies_path()
+	pass
 
 func update_enemies_path():
 	for enemy in $Enemies.get_children():
-		var path = compute_path(enemy.get_node("KinematicBody2D").position, $Player/KinematicBody2D.position, false)
+		update_enemy_path(enemy)
+
+func update_enemy_path(enemy):
+	var path = compute_path(enemy.get_node("KinematicBody2D").position, $Player/KinematicBody2D.position, false)
 #		$Player/KinematicBody2D.global_position
-		if path == null:
-			continue
-		enemy.set_path(path) # TODO do we really want to do this every step ?
+	if path == null:
+		return
+	enemy.set_path(path) # TODO do we really want to do this every step ?
 
 func _on_Bg_button_up():
 	var mouse_pos = get_global_mouse_position()
@@ -132,18 +165,18 @@ func compute_path(from : Vector2, to : Vector2, add_noise : bool):
 #			if is_line_in_walls(a_star.get_point_position(path[from_point_idx], path[to_point_idx_test])):
 #				to_point_idx_max = to_point_idx_test - 1 # we can't go further
 #				# ... interrupted dev because it's not actually the most accurate algo (but it has good perf)
-	var from_point_idx = 0
-	while from_point_idx < len(path) - 2:
-		var to_point_idx_test = len(path) - 1
-		while to_point_idx_test > from_point_idx + 1:
-			if is_line_in_walls(path[from_point_idx], path[to_point_idx_test]):
-				pass
-			else:
-				for _dummy in range(to_point_idx_test - from_point_idx - 1):
-					path.remove(from_point_idx+1)
-				break
-			to_point_idx_test -= 1
-		from_point_idx += 1
+#	var from_point_idx = 0
+#	while from_point_idx < len(path) - 2:
+#		var to_point_idx_test = len(path) - 1
+#		while to_point_idx_test > from_point_idx + 1:
+#			if is_line_in_walls(path[from_point_idx], path[to_point_idx_test]):
+#				pass
+#			else:
+#				for _dummy in range(to_point_idx_test - from_point_idx - 1):
+#					path.remove(from_point_idx+1)
+#				break
+#			to_point_idx_test -= 1
+#		from_point_idx += 1
 	
 	### often times, points at indexes 1 and -2 can be moved along x or y axis for a better path
 	# TODO

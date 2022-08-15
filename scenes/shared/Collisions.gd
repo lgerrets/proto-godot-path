@@ -37,4 +37,5 @@ func compute_next_pos(node : Character, nearby_characters : Array, apply_directi
 	var force = _compute_repulsion_force(node, node.nearby_characters) * node.DYNAMICS_FACTOR
 	velocity += delta * force / node.MASS
 	var body = node.get_node("KinematicBody2D")
-	body.move_and_collide(velocity * delta)
+	var collision_infos = body.move_and_collide(velocity * delta)
+	pass

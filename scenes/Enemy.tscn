@@ -9,3 +9,8 @@ script = ExtResource( 2 )
 
 [node name="Sprite" parent="KinematicBody2D" index="0"]
 texture = ExtResource( 3 )
+
+[node name="UpdatePath" type="Timer" parent="." index="2"]
+autostart = true
+
+[connection signal="timeout" from="UpdatePath" to="." method="_on_UpdatePath_timeout"]

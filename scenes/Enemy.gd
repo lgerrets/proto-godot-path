@@ -1,5 +1,6 @@
 extends Character
 
+signal update_path(enemy)
 
 # Declare member variables here. Examples:
 # var a = 2
@@ -10,7 +11,9 @@ extends Character
 func _ready():
 	pass # Replace with function body.
 
-
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 #func _process(delta):
 #	pass
+
+func _on_UpdatePath_timeout():
+	emit_signal("update_path", self)

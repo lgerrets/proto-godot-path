@@ -42,5 +42,6 @@ margin_bottom = 600.0
 [node name="Enemies" type="Node2D" parent="."]
 
 [node name="Enemy" parent="Enemies" instance=ExtResource( 4 )]
+position = Vector2( 558, 55 )
 
 [connection signal="button_up" from="UI/Bg" to="." method="_on_Bg_button_up"]
