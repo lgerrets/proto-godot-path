@@ -9,7 +9,6 @@ enum State {
 
 var SPEED_MAX = 2
 var MASS = 1
-var DYNAMICS_FACTOR = 50
 var state = State.IDLE
 var path_offset
 var nearby_characters = []
@@ -33,7 +32,7 @@ func _process(delta):
 			pass
 		State.FOLLOW_PATH:
 			new_path_offset = path.curve.get_closest_offset(curr_position)
-			new_path_offset += delta*SPEED_MAX*DYNAMICS_FACTOR
+			new_path_offset += delta * SPEED_MAX * Global.DYNAMICS_FACTOR
 			baked_length = path.curve.get_baked_length()
 			if new_path_offset > baked_length:
 				set_state(State.IDLE)
@@ -42,9 +41,9 @@ func _process(delta):
 				path_follow.set_offset(path_offset)
 				new_position = path_follow.get_position()
 				desired_direction = (new_position - curr_position).normalized()
-				Collisions.compute_next_pos(self, nearby_characters, desired_direction, SPEED_MAX, MASS, delta)
 		_:
 			assert(false)
+	Collisions.compute_next_pos(self, nearby_characters, desired_direction, SPEED_MAX, MASS, delta)
 
 func set_state(o_state):
 	state = o_state

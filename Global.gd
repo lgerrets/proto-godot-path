@@ -3,6 +3,8 @@ extends Node
 const DEBUG = 1
 const LOG_LEVEL = 2
 
+const DYNAMICS_FACTOR = 50
+
 func logger(msg):
 	if LOG_LEVEL > 1:
 		print(msg)

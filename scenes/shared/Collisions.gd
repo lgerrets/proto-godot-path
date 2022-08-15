@@ -33,9 +33,13 @@ func _compute_repulsion_force(node : Node, other_nodes : Array):
 
 func compute_next_pos(node : Character, nearby_characters : Array, apply_direction : Vector2, speed_max : float, mass : float, delta : float):
 	var desired_direction = apply_direction
-	var velocity = desired_direction.normalized() * node.SPEED_MAX * node.DYNAMICS_FACTOR
-	var force = _compute_repulsion_force(node, node.nearby_characters) * node.DYNAMICS_FACTOR
+	var velocity = desired_direction.normalized() * node.SPEED_MAX * Global.DYNAMICS_FACTOR
+	var force = _compute_repulsion_force(node, node.nearby_characters) * Global.DYNAMICS_FACTOR
 	velocity += delta * force / node.MASS
 	var body = node.get_node("KinematicBody2D")
-	var collision_infos = body.move_and_collide(velocity * delta)
-	pass
+	var d_pos = velocity * delta
+	d_pos = d_pos.clamped(5) # fixes bodies clipping into one another or getting ejected
+	var collision_infos = body.move_and_collide(d_pos, true, true, true)
+	if (collision_infos == null) or (collision_infos.get_travel().length() > 1):
+		collision_infos = body.move_and_collide(d_pos, true, true, false)
+		Global.logger(d_pos)
