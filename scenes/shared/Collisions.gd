@@ -39,7 +39,19 @@ func compute_next_pos(node : Character, nearby_characters : Array, apply_directi
 	var body = node.get_node("KinematicBody2D")
 	var d_pos = velocity * delta
 	d_pos = d_pos.clamped(5) # fixes bodies clipping into one another or getting ejected
+	check_collision_clip(node, nearby_characters)
 	var collision_infos = body.move_and_collide(d_pos, true, true, true)
+	check_collision_clip(node, nearby_characters)
 	if (collision_infos == null) or (collision_infos.get_travel().length() > 1):
 		collision_infos = body.move_and_collide(d_pos, true, true, false)
-		Global.logger(d_pos)
+		check_collision_clip(node, nearby_characters)
+
+func check_collision_clip(node : Character, nearby_characters : Array):
+	if Global.DEBUG:
+		var collision_shape = node.get_node("KinematicBody2D/CollisionShape2D")
+		var other_collision_shape
+		var distance
+		for character in nearby_characters:
+			other_collision_shape = character.get_node("KinematicBody2D/CollisionShape2D")
+			distance = collision_shape.global_position.distance_to(other_collision_shape.global_position)
+			assert(distance > 30)
