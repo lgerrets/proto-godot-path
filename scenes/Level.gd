@@ -4,6 +4,8 @@ onready var example_player = $Player
 onready var example_enemy = $Enemies/Enemy
 
 var a_star : AStar2D
+var a_star_max_point_id = 1
+
 const GRID_RES = 32
 const CAM_SPEED = 12
 
@@ -20,56 +22,11 @@ func _ready():
 	
 	a_star = AStar2D.new()
 	var prev_line_idxes = null
-	var grid_y = $Layout/Start.position.y
-	while grid_y < $Layout/End.position.y:
-		var grid_x = $Layout/Start.position.x
-		var curr_line_idxes = []
-		var grid_x_idx = 0
-		while grid_x < $Layout/End.position.x:
-			var point_idx = a_star.get_available_point_id()
-			var weight_scale = 1 # must be >= 1 ; we could use this param to simulate speed buff/debuff AoE
-			var pos = Vector2(grid_x, grid_y)
-			var other_point_idx
-			var connects_to_principal_component = false
-			a_star.add_point(point_idx, pos, weight_scale)			
-			# does connect to left ?
-			if (len(curr_line_idxes) > 0) and not does_circle_collide_during_motion(pos, Vector2(- GRID_RES, 0), max_radius):
-				other_point_idx = curr_line_idxes[-1]
-				if other_point_idx != null:
-					a_star.connect_points(point_idx, other_point_idx)
-					grid_segments.append([point_idx, other_point_idx])
-					connects_to_principal_component = true
-			if (prev_line_idxes != null):
-				# does connect to top ?
-				if not does_circle_collide_during_motion(pos, Vector2(0, - GRID_RES), max_radius):
-					other_point_idx = prev_line_idxes[grid_x_idx]
-					if other_point_idx != null:
-						a_star.connect_points(point_idx, other_point_idx)
-						grid_segments.append([point_idx, other_point_idx])
-						connects_to_principal_component = true
-				# does connect to top-left ?
-				if (len(curr_line_idxes) > 0) and not does_circle_collide_during_motion(pos, Vector2(- GRID_RES, - GRID_RES), max_radius):
-					other_point_idx = prev_line_idxes[grid_x_idx-1]
-					if other_point_idx != null:
-						a_star.connect_points(point_idx, other_point_idx)
-						grid_segments.append([point_idx, other_point_idx])
-						connects_to_principal_component = true
-				# does connect to top-right ?
-				if (len(curr_line_idxes) < len(prev_line_idxes) - 1) and not does_circle_collide_during_motion(pos, Vector2(GRID_RES, - GRID_RES), max_radius):
-					other_point_idx = prev_line_idxes[grid_x_idx+1]
-					if other_point_idx != null:
-						a_star.connect_points(point_idx, other_point_idx)
-						grid_segments.append([point_idx, other_point_idx])
-						connects_to_principal_component = true
-			if connects_to_principal_component or ((grid_x == $Layout/Start.position.x) and (grid_y == $Layout/Start.position.y)):
-				curr_line_idxes.append(point_idx)
-			else:
-				a_star.remove_point(point_idx)
-				curr_line_idxes.append(null)
-			grid_x_idx += 1
-			grid_x += GRID_RES
-		prev_line_idxes = curr_line_idxes
-		grid_y += GRID_RES
+	var n_points = Vector2(
+		int($Layout/End.position.x - $Layout/Start.position.x) / GRID_RES,
+		int($Layout/End.position.y - $Layout/Start.position.y) / GRID_RES
+	)
+	build_astar($Layout/Start.global_position, n_points, max_radius)
 		
 	# spawn enemies
 	
@@ -80,6 +37,60 @@ func _ready():
 	
 	if not Global.DEBUG:
 		$DebugUI.hide()
+
+class AstarNode:
+	var point_idx : int # index for AStar
+	var grid_pos : Vector2 # coordinates in the grid (eg column x row y)
+	var point : Vector2 # classic 2D coordinates, as in global_position
+	
+	static func point_if_in_bounds(grid_pos : Vector2, start : Vector2, n_points : Vector2):
+		var valid = true
+		valid = valid and (grid_pos.x < n_points.x)
+		valid = valid and (grid_pos.y < n_points.y)
+		valid = valid and (grid_pos.x >= 0)
+		valid = valid and (grid_pos.y >= 0)
+		
+		var ret
+		if not valid:
+			ret = null
+		else:
+			ret = AstarNode.new()
+			ret.grid_pos = grid_pos
+			ret.point = start + GRID_RES * grid_pos
+			ret.point_idx = grid_pos.x + grid_pos.y * n_points.x
+		return ret
+
+func build_astar(start : Vector2, n_points : Vector2, max_radius : float):
+	var start_point_idx = a_star_max_point_id
+	assert(a_star_max_point_id >= a_star.get_available_point_id()) # we should assert that it's above any point id
+	var curr_node = AstarNode.point_if_in_bounds(Vector2(0,0), start, n_points)
+	assert(curr_node != null)
+	a_star.add_point(curr_node.point_idx, curr_node.point, 1.0)
+	var closed_list = {}
+	var open_list = {curr_node.point_idx : curr_node}
+	var neigh
+	while len(open_list) > 0:
+		var curr_node_idx = open_list.keys()[0]
+		curr_node = open_list[curr_node_idx]
+		for delta in [
+			Vector2(-1,-1), Vector2(0,-1), Vector2(1,-1),
+			Vector2(-1,0), Vector2(1,0),
+			Vector2(-1,1), Vector2(0,1), Vector2(1,1),
+		]:
+			if not does_circle_collide_during_motion(curr_node.point, delta * GRID_RES, max_radius):
+				neigh = AstarNode.point_if_in_bounds(curr_node.grid_pos + delta, start, n_points)
+				if (neigh != null):
+					if not (neigh.point_idx in closed_list) and not (neigh.point_idx in open_list):
+						open_list[neigh.point_idx] = neigh
+						a_star.add_point(neigh.point_idx, neigh.point, 1.0)
+					if curr_node.point_idx == 0:
+						pass
+					a_star.connect_points(curr_node.point_idx, neigh.point_idx)
+					grid_segments.append([curr_node.point_idx, neigh.point_idx])
+		open_list.erase(curr_node_idx)
+		closed_list[curr_node_idx] = curr_node
+	a_star_max_point_id += n_points.x * n_points.y
+	
 	
 func spawn_enemies():
 	for enemy in $Enemies.get_children():
@@ -223,10 +234,12 @@ func compute_path(from : Vector2, to : Vector2, add_noise : bool, collision_radi
 	return path
 
 func _draw():
+	var point_idx
+	var other_point_idx
 	if Global.DEBUG:
 		for grid_segment in grid_segments:
-			var point_idx = grid_segment[0]
-			var other_point_idx = grid_segment[1]
+			point_idx = grid_segment[0]
+			other_point_idx = grid_segment[1]
 			draw_line(a_star.get_point_position(point_idx), a_star.get_point_position(other_point_idx), Color.red, 1, true)
 		draw_polyline($Player/Path2D.curve.get_baked_points(), Color(0.3,1,1,0.5), 3, true)
 		for enemy in $Enemies.get_children():
