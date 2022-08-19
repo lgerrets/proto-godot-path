@@ -40,11 +40,13 @@ func compute_next_pos(node : Character, nearby_characters : Array, apply_directi
 	var d_pos = velocity * delta
 	d_pos = d_pos.clamped(5) # fixes bodies clipping into one another or getting ejected
 	check_collision_clip(node, nearby_characters)
-	var collision_infos = body.move_and_collide(d_pos, true, true, true)
+#	var collision_infos = body.move_and_collide(d_pos, true, true, true)
+#	if (collision_infos == null) or (collision_infos.get_travel().length() > 1):
+#		collision_infos = body.move_and_collide(d_pos, true, true, false)
+#		check_collision_clip(node, nearby_characters)
+	d_pos = body.move_and_slide(d_pos)
+	body.position += d_pos
 	check_collision_clip(node, nearby_characters)
-	if (collision_infos == null) or (collision_infos.get_travel().length() > 1):
-		collision_infos = body.move_and_collide(d_pos, true, true, false)
-		check_collision_clip(node, nearby_characters)
 
 func check_collision_clip(node : Character, nearby_characters : Array):
 	if Global.DEBUG:
