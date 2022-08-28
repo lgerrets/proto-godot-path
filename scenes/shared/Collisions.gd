@@ -11,16 +11,16 @@ func _ready():
 
 func _compute_repulsion_force(node : Node, other_nodes : Array):
 	var force = Vector2(0, 0)
-	var collision_shape = node.get_node("KinematicBody2D/CollisionShape2D")
-	var repulsion_shape = node.get_node("KinematicBody2D/RepulsionHitbox/CollisionShape2D")
+	var collision_shape = node.body.get_node("CollisionShape2D")
+	var repulsion_shape = node.body.get_node("RepulsionHitbox/CollisionShape2D")
 	var other_collision_shape
 	var other_repulsion_shape
 	var coef
 	var unit_direction
 	var d2
 	for other_node in other_nodes:
-		other_collision_shape = other_node.get_node("KinematicBody2D/CollisionShape2D")
-		other_repulsion_shape = other_node.get_node("KinematicBody2D/RepulsionHitbox/CollisionShape2D")
+		other_collision_shape = other_node.body.get_node("CollisionShape2D")
+		other_repulsion_shape = other_node.body.get_node("RepulsionHitbox/CollisionShape2D")
 		coef = repulsion_shape.shape.radius - collision_shape.shape.radius + other_repulsion_shape.shape.radius - other_collision_shape.shape.radius
 		coef = pow(coef, 2)
 		assert (collision_shape.global_position != other_collision_shape.global_position)
@@ -33,10 +33,10 @@ func _compute_repulsion_force(node : Node, other_nodes : Array):
 
 func compute_next_pos(node : Character, nearby_characters : Array, apply_direction : Vector2, speed_max : float, mass : float, delta : float):
 	var desired_direction = apply_direction
-	var velocity = desired_direction.normalized() * node.SPEED_MAX * Global.DYNAMICS_FACTOR
+	var velocity = desired_direction.normalized() * speed_max
 	var force = _compute_repulsion_force(node, node.nearby_characters) * Global.DYNAMICS_FACTOR
 	velocity += delta * force / node.MASS
-	var body = node.get_node("KinematicBody2D")
+	var body = node.body
 	var d_pos = velocity * delta
 	d_pos = d_pos.clamped(5) # fixes bodies clipping into one another or getting ejected
 	check_collision_clip(node, nearby_characters)
@@ -50,10 +50,10 @@ func compute_next_pos(node : Character, nearby_characters : Array, apply_directi
 
 func check_collision_clip(node : Character, nearby_characters : Array):
 	if Global.DEBUG:
-		var collision_shape = node.get_node("KinematicBody2D/CollisionShape2D")
+		var collision_shape = node.body.get_node("CollisionShape2D")
 		var other_collision_shape
 		var distance
 		for character in nearby_characters:
-			other_collision_shape = character.get_node("KinematicBody2D/CollisionShape2D")
+			other_collision_shape = character.body.get_node("CollisionShape2D")
 			distance = collision_shape.global_position.distance_to(other_collision_shape.global_position)
 			assert(distance > 30)

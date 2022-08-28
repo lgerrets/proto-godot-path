@@ -11,13 +11,15 @@ const CAM_SPEED = 12
 
 var grid_segments = []
 
+onready var debug_ui = $Camera2D/DebugUI
+
 # Called when the node enters the scene tree for the first time.
 func _ready():
 	var max_radius = 0
 	var temp_radius
 	for character in [example_player, example_enemy]:
 		if character != null:
-			temp_radius = character.get_node("KinematicBody2D/CollisionShape2D").shape.radius
+			temp_radius = character.body.get_node("CollisionShape2D").shape.radius
 			max_radius = max(temp_radius, max_radius)
 	
 	a_star = AStar2D.new()
@@ -28,6 +30,8 @@ func _ready():
 	)
 	build_astar($Layout/Start.global_position, n_points, max_radius)
 		
+	$Player.connect("update_path", self, "update_player_path")
+	
 	# spawn enemies
 	
 	spawn_enemies()
@@ -36,7 +40,7 @@ func _ready():
 	$Camera2D.make_current()
 	
 	if not Global.DEBUG:
-		$DebugUI.hide()
+		$Camera2D/DebugUI.hide()
 
 class AstarNode:
 	var point_idx : int # index for AStar
@@ -163,37 +167,40 @@ func _process(delta):
 	if Input.is_action_pressed("camera_up"):
 		$Camera2D.position.y -= CAM_SPEED
 	if Global.DEBUG:
-		var x = $DebugUI/TextEdit.text
-		var y = $DebugUI/TextEdit2.text
+		var x = debug_ui.get_node("TextEdit").text
+		var y = debug_ui.get_node("TextEdit2").text
 		x = int(x)
 		y = int(y)
-		$DebugUI/Sprite.position.x = x
-		$DebugUI/Sprite.position.y = y
+		debug_ui.get_node("Sprite").position.x = x
+		debug_ui.get_node("Sprite").position.y = y
 
 func update_enemies_path():
 	for enemy in $Enemies.get_children():
 		update_enemy_path(enemy)
 
 func update_enemy_path(enemy):
-	var path = compute_path(enemy.get_node("KinematicBody2D").position, $Player/KinematicBody2D.position, false, enemy.get_node("KinematicBody2D/CollisionShape2D").shape.radius)
-#		$Player/KinematicBody2D.global_position
+	var path = compute_path(enemy.body.position, $Player.body.position, false, enemy.body.get_node("CollisionShape2D").shape.radius)
 	if path == null:
 		return
 	enemy.set_path(path)
 	update()
 
-func _on_Bg_button_up():
-	var mouse_pos = get_global_mouse_position()
-	var path = compute_path($Player/KinematicBody2D.position, mouse_pos, false, $Player/KinematicBody2D/CollisionShape2D.shape.radius)
+func update_player_path(player, desired_destination):
+	var path = compute_path(player.body.position, desired_destination, false, player.body.get_node("CollisionShape2D").shape.radius)
 	if path == null:
 		if Global.DEBUG:
-			$DebugUI/RichTextLabel.show()
+			debug_ui.get_node("RichTextLabel").show()
 		return
 	else:
 		if Global.DEBUG:
-			$DebugUI/RichTextLabel.hide()
+			debug_ui.get_node("RichTextLabel").hide()
 	$Player.set_path(path)
 	update()
+
+func _on_Bg_button_up():
+	var mouse_pos = get_global_mouse_position()
+	$Player.desired_destination = mouse_pos
+	update_player_path($Player, mouse_pos)
 
 func compute_path(from : Vector2, to : Vector2, add_noise : bool, collision_radius : float):
 	### build the path : from -> grid_from -> grid_to -> to

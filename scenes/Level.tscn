@@ -26,16 +26,16 @@ position = Vector2( 937, 522 )
 position = Vector2( 694, 175 )
 
 [node name="Wall2" parent="Layout/Walls" instance=ExtResource( 2 )]
-position = Vector2( 576, 175 )
+position = Vector2( 615, 175 )
 
 [node name="Wall3" parent="Layout/Walls" instance=ExtResource( 2 )]
-position = Vector2( 458, 175 )
+position = Vector2( 538, 175 )
 
 [node name="Wall4" parent="Layout/Walls" instance=ExtResource( 2 )]
-position = Vector2( 458, 304 )
+position = Vector2( 496, 249 )
 
 [node name="Wall5" parent="Layout/Walls" instance=ExtResource( 2 )]
-position = Vector2( 458, 431 )
+position = Vector2( 488, 330 )
 
 [node name="Enemies" type="Node2D" parent="."]
 
@@ -48,34 +48,39 @@ position = Vector2( 116, 445 )
 [node name="Enemy3" parent="Enemies" instance=ExtResource( 4 )]
 position = Vector2( 819, 418 )
 
-[node name="UI" type="Node2D" parent="."]
+[node name="Camera2D" type="Camera2D" parent="."]
+position = Vector2( 512, 300 )
 
-[node name="Bg" type="Button" parent="UI"]
+[node name="UI" type="Node2D" parent="Camera2D"]
+position = Vector2( -512, -300 )
+
+[node name="Bg" type="Button" parent="Camera2D/UI"]
 self_modulate = Color( 1, 1, 1, 0 )
 margin_right = 1024.0
 margin_bottom = 600.0
 
-[node name="DebugUI" type="Node2D" parent="."]
+[node name="DebugUI" type="Node2D" parent="Camera2D"]
+position = Vector2( -512, -300 )
 
-[node name="TextEdit" type="TextEdit" parent="DebugUI"]
+[node name="TextEdit" type="TextEdit" parent="Camera2D/DebugUI"]
 margin_left = 929.0
 margin_top = 2.0
 margin_right = 970.0
 margin_bottom = 30.0
 text = "0"
 
-[node name="TextEdit2" type="TextEdit" parent="DebugUI"]
+[node name="TextEdit2" type="TextEdit" parent="Camera2D/DebugUI"]
 margin_left = 980.0
 margin_top = 2.0
 margin_right = 1021.0
 margin_bottom = 30.0
 text = "0"
 
-[node name="Sprite" type="Sprite" parent="DebugUI"]
+[node name="Sprite" type="Sprite" parent="Camera2D/DebugUI"]
 scale = Vector2( 0.1, 0.1 )
 texture = ExtResource( 5 )
 
-[node name="RichTextLabel" type="RichTextLabel" parent="DebugUI"]
+[node name="RichTextLabel" type="RichTextLabel" parent="Camera2D/DebugUI"]
 self_modulate = Color( 1, 0, 0, 1 )
 margin_left = 899.0
 margin_top = 39.0
@@ -83,7 +88,4 @@ margin_right = 1026.0
 margin_bottom = 62.0
 text = "Invalid player path"
 
-[node name="Camera2D" type="Camera2D" parent="."]
-position = Vector2( 512, 300 )
-
-[connection signal="button_up" from="UI/Bg" to="." method="_on_Bg_button_up"]
+[connection signal="button_up" from="Camera2D/UI/Bg" to="." method="_on_Bg_button_up"]
