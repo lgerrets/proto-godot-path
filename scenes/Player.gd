@@ -9,11 +9,12 @@ onready var update_path_timer = $UpdatePath
 const character_type = CharacterType.PLAYER
 
 var desired_destination
-var hp = 100
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
 	MASS = 5
+	hp_max = 100
+	hp = hp_max
 
 func set_state(o_state):
 	.set_state(o_state)

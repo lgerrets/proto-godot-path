@@ -12,7 +12,8 @@ onready var update_path_timer = $UpdatePath
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
-	pass # Replace with function body.
+	hp_max = 40
+	hp = hp_max
 
 func my_process(delta):
 	if action_state == ActionState.IDLE:
@@ -21,7 +22,6 @@ func my_process(delta):
 			set_action_state(ActionState.HITTING)
 	
 	.my_process(delta)
-	Global.logger(str(update_path_timer.time_left) + " " + str(hit_timer.time_left))
 
 func find_closest_player(search_range):
 	var closest_dist = search_range + 1
@@ -40,5 +40,5 @@ func _on_UpdatePath_timeout():
 func _on_HitTimer_timeout():
 	var maybe_player = find_closest_player(HIT_RANGE)
 	if maybe_player != null:
-		maybe_player.hp -= HIT_DAMAGE
+		maybe_player.set_d_hp(- HIT_DAMAGE)
 	emit_signal("update_path", self)

@@ -26,9 +26,12 @@ var nearby_characters = []
 var desired_direction = Vector2(0, 0)
 var curr_position
 var last_position = Vector2(0,0)
+var hp
+var hp_max
 
 onready var body = $KinematicBody2D
 onready var hit_timer = $HitTimer
+onready var hp_bar = $KinematicBody2D/HpBar
 onready var animated_sprite : AnimatedSprite = body.get_node("AnimatedSprite")
 
 const dir_to_anim = {
@@ -46,6 +49,7 @@ func _ready():
 	last_position = position
 	position = Vector2(0,0)
 	animated_sprite.play("walk_down")
+	hp_bar.visible = false
 
 func _process(delta):
 	my_process(delta)
@@ -127,3 +131,11 @@ func _on_RepulsionHitbox_area_entered(area):
 func _on_RepulsionHitbox_area_exited(area):
 	var character = area.get_parent().get_parent()
 	nearby_characters.erase(character)
+
+func set_d_hp(d_hp):
+	hp = min(hp_max, hp + d_hp)
+	if hp < hp_max:
+		hp_bar.value = max(0, 100 * hp / hp_max)
+		hp_bar.visible = true
+	else:
+		hp_bar.visible = false
