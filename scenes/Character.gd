@@ -7,9 +7,20 @@ enum State {
 	FOLLOW_PATH,
 }
 
+enum ActionState {
+	IDLE,
+	HITTING,
+}
+
+enum CharacterType {
+	PLAYER,
+	ENEMY,
+}
+
 var SPEED_MAX = 2 * Global.DYNAMICS_FACTOR
 var MASS = 1
 var state = State.IDLE
+var action_state = ActionState.IDLE
 var path_offset
 var nearby_characters = []
 var desired_direction = Vector2(0, 0)
@@ -17,6 +28,7 @@ var curr_position
 var last_position = Vector2(0,0)
 
 onready var body = $KinematicBody2D
+onready var hit_timer = $HitTimer
 onready var animated_sprite : AnimatedSprite = body.get_node("AnimatedSprite")
 
 const dir_to_anim = {
@@ -35,8 +47,10 @@ func _ready():
 	position = Vector2(0,0)
 	animated_sprite.play("walk_down")
 
-# Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta):
+	my_process(delta)
+	
+func my_process(delta):
 	var path = $Path2D
 	var path_follow = $Path2D/PathFollow2D
 	last_position = curr_position
@@ -76,6 +90,19 @@ func set_state(o_state):
 			desired_direction = Vector2(0, 0)
 		State.FOLLOW_PATH:
 			pass
+		State.HITTING:
+			pass
+		_:
+			assert(false)
+
+func set_action_state(o_state):
+	action_state = o_state
+	match action_state:
+		ActionState.IDLE:
+			hit_timer.set_paused(true)
+		ActionState.HITTING:
+			hit_timer.set_paused(false)
+			hit_timer.start()
 		_:
 			assert(false)
 

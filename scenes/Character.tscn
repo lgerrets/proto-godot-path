@@ -37,5 +37,7 @@ shape = SubResource( 1 )
 [node name="CollisionShape2D" type="CollisionShape2D" parent="KinematicBody2D/RepulsionHitbox"]
 shape = SubResource( 3 )
 
+[node name="HitTimer" type="Timer" parent="."]
+
 [connection signal="area_entered" from="KinematicBody2D/RepulsionHitbox" to="." method="_on_RepulsionHitbox_area_entered"]
 [connection signal="area_exited" from="KinematicBody2D/RepulsionHitbox" to="." method="_on_RepulsionHitbox_area_exited"]

@@ -6,7 +6,10 @@ signal update_path(player, desired_destination)
 
 onready var update_path_timer = $UpdatePath
 
+const character_type = CharacterType.PLAYER
+
 var desired_destination
+var hp = 100
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
