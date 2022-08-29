@@ -12,6 +12,7 @@ const CAM_SPEED = 12
 var grid_segments = []
 
 onready var debug_ui = $Camera2D/DebugUI
+onready var layout = $Layout
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
@@ -41,6 +42,12 @@ func _ready():
 	
 	if not Global.DEBUG:
 		$Camera2D/DebugUI.hide()
+	
+	spawn_piece()
+
+func spawn_piece():
+	var piece = PieceMaker.create_piece()
+	layout.add_child(piece)
 
 class AstarNode:
 	var point_idx : int # index for AStar
@@ -173,7 +180,7 @@ func _process(delta):
 		y = int(y)
 		debug_ui.get_node("Sprite").position.x = x
 		debug_ui.get_node("Sprite").position.y = y
-
+	
 func update_enemies_path():
 	for enemy in $Enemies.get_children():
 		update_enemy_path(enemy)
@@ -254,3 +261,4 @@ func _draw():
 		
 
 
+		

@@ -6,11 +6,14 @@
 extents = Vector2( 32, 32 )
 
 [node name="Wall" type="StaticBody2D"]
+z_index = -1
 collision_layer = 3
 collision_mask = 3
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2( 32, 32 )
+z_index = 1
 shape = SubResource( 1 )
 
-[node name="Sprite" type="Sprite" parent="."]
+[node name="Sprite" type="Sprite" parent="CollisionShape2D"]
 texture = ExtResource( 1 )
