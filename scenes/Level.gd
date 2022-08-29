@@ -10,6 +10,7 @@ const GRID_RES = 32
 const CAM_SPEED = 12
 
 var grid_segments = []
+var placing_piece = null
 
 onready var debug_ui = $Camera2D/DebugUI
 onready var layout = $Layout
@@ -46,8 +47,8 @@ func _ready():
 	spawn_piece()
 
 func spawn_piece():
-	var piece = PieceMaker.create_piece()
-	layout.add_child(piece)
+	placing_piece = PieceMaker.create_piece()
+	layout.add_child(placing_piece)
 
 class AstarNode:
 	var point_idx : int # index for AStar
@@ -173,6 +174,17 @@ func _process(delta):
 		$Camera2D.position.y += CAM_SPEED
 	if Input.is_action_pressed("camera_up"):
 		$Camera2D.position.y -= CAM_SPEED
+	
+	if placing_piece != null:
+		if Input.is_action_pressed("piece_right"):
+			placing_piece.position.x += placing_piece.tile_w
+		if Input.is_action_pressed("piece_left"):
+			placing_piece.position.x -= placing_piece.tile_w
+		if Input.is_action_pressed("piece_down"):
+			placing_piece.position.y += placing_piece.tile_h
+		if Input.is_action_pressed("piece_up"):
+			placing_piece.position.y -= placing_piece.tile_h
+	
 	if Global.DEBUG:
 		var x = debug_ui.get_node("TextEdit").text
 		var y = debug_ui.get_node("TextEdit2").text

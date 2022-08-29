@@ -21,6 +21,8 @@ static func create_piece() -> Node2D:
 	var tiles = piece.get_node("Tiles")
 	var shape = randi() % len(Shape)
 	piece.shape = shape
+	piece.tile_w = tile_w
+	piece.tile_h = tile_h
 	var relative_positions
 	match shape:
 		Shape.L:

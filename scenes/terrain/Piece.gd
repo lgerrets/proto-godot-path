@@ -3,6 +3,8 @@ extends Node2D
 class_name Piece
 
 var shape
+var tile_w
+var tile_h
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
