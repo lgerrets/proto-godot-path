@@ -12,7 +12,7 @@ _data = {
 radius = 23.5372
 
 [sub_resource type="CircleShape2D" id=3]
-radius = 80.0
+radius = 40.0
 
 [sub_resource type="Theme" id=4]
 

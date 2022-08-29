@@ -13,7 +13,7 @@ var desired_destination
 # Called when the node enters the scene tree for the first time.
 func _ready():
 	MASS = 5
-	hp_max = 100
+	hp_max = 10000
 	hp = hp_max
 
 func set_state(o_state):

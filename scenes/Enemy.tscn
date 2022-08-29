@@ -1,29 +1,15 @@
-[gd_scene load_steps=19 format=2]
+[gd_scene load_steps=23 format=2]
 
 [ext_resource path="res://scenes/Character.tscn" type="PackedScene" id=1]
 [ext_resource path="res://scenes/Enemy.gd" type="Script" id=2]
 [ext_resource path="res://assets/dummy/red.png" type="Texture" id=3]
 [ext_resource path="res://assets/elv-games/Character_003.png" type="Texture" id=4]
+[ext_resource path="res://assets/elv-games/Character_003_Battler.png" type="Texture" id=5]
 
 [sub_resource type="AtlasTexture" id=14]
 flags = 4
 atlas = ExtResource( 4 )
 region = Rect2( 48, 0, 48, 48 )
-
-[sub_resource type="AtlasTexture" id=8]
-flags = 4
-atlas = ExtResource( 4 )
-region = Rect2( 0, 96, 48, 48 )
-
-[sub_resource type="AtlasTexture" id=9]
-flags = 4
-atlas = ExtResource( 4 )
-region = Rect2( 48, 96, 48, 48 )
-
-[sub_resource type="AtlasTexture" id=10]
-flags = 4
-atlas = ExtResource( 4 )
-region = Rect2( 96, 96, 48, 48 )
 
 [sub_resource type="AtlasTexture" id=5]
 flags = 4
@@ -39,6 +25,21 @@ region = Rect2( 48, 48, 48, 48 )
 flags = 4
 atlas = ExtResource( 4 )
 region = Rect2( 96, 48, 48, 48 )
+
+[sub_resource type="AtlasTexture" id=8]
+flags = 4
+atlas = ExtResource( 4 )
+region = Rect2( 0, 96, 48, 48 )
+
+[sub_resource type="AtlasTexture" id=9]
+flags = 4
+atlas = ExtResource( 4 )
+region = Rect2( 48, 96, 48, 48 )
+
+[sub_resource type="AtlasTexture" id=10]
+flags = 4
+atlas = ExtResource( 4 )
+region = Rect2( 96, 96, 48, 48 )
 
 [sub_resource type="AtlasTexture" id=11]
 flags = 4
@@ -70,6 +71,21 @@ flags = 4
 atlas = ExtResource( 4 )
 region = Rect2( 96, 144, 48, 48 )
 
+[sub_resource type="AtlasTexture" id=15]
+flags = 4
+atlas = ExtResource( 5 )
+region = Rect2( 192, 0, 64, 64 )
+
+[sub_resource type="AtlasTexture" id=16]
+flags = 4
+atlas = ExtResource( 5 )
+region = Rect2( 256, 0, 64, 64 )
+
+[sub_resource type="AtlasTexture" id=17]
+flags = 4
+atlas = ExtResource( 5 )
+region = Rect2( 320, 0, 64, 64 )
+
 [sub_resource type="SpriteFrames" id=1]
 animations = [ {
 "frames": [ SubResource( 14 ) ],
@@ -77,14 +93,14 @@ animations = [ {
 "name": "idle",
 "speed": 5.0
 }, {
-"frames": [ SubResource( 8 ), SubResource( 9 ), SubResource( 10 ), SubResource( 9 ) ],
-"loop": true,
-"name": "walk_right",
-"speed": 5.0
-}, {
 "frames": [ SubResource( 5 ), SubResource( 6 ), SubResource( 7 ), SubResource( 6 ) ],
 "loop": true,
 "name": "walk_left",
+"speed": 5.0
+}, {
+"frames": [ SubResource( 8 ), SubResource( 9 ), SubResource( 10 ), SubResource( 9 ) ],
+"loop": true,
+"name": "walk_right",
 "speed": 5.0
 }, {
 "frames": [ SubResource( 11 ), SubResource( 12 ), SubResource( 13 ), SubResource( 12 ) ],
@@ -95,6 +111,11 @@ animations = [ {
 "frames": [ SubResource( 2 ), SubResource( 3 ), SubResource( 4 ), SubResource( 3 ) ],
 "loop": true,
 "name": "walk_up",
+"speed": 5.0
+}, {
+"frames": [ SubResource( 15 ), SubResource( 15 ), SubResource( 16 ), SubResource( 17 ), SubResource( 17 ) ],
+"loop": true,
+"name": "hit_left",
 "speed": 5.0
 } ]
 
@@ -108,7 +129,6 @@ texture = ExtResource( 3 )
 [node name="AnimatedSprite" type="AnimatedSprite" parent="KinematicBody2D" index="3"]
 position = Vector2( 0, -5 )
 frames = SubResource( 1 )
-animation = "idle"
 
 [node name="UpdatePath" type="Timer" parent="." index="2"]
 autostart = true

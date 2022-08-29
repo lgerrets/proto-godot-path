@@ -28,18 +28,27 @@ var curr_position
 var last_position = Vector2(0,0)
 var hp
 var hp_max
+var max_dpos_length = 1
 
 onready var body = $KinematicBody2D
 onready var hit_timer = $HitTimer
 onready var hp_bar = $KinematicBody2D/HpBar
 onready var animated_sprite : AnimatedSprite = body.get_node("AnimatedSprite")
 
-const dir_to_anim = {
+const dir_to_anim_walk = {
 	Global.Direction.UP : "walk_up",
 	Global.Direction.RIGHT : "walk_right",
 	Global.Direction.DOWN : "walk_down",
 	Global.Direction.LEFT : "walk_left",
 	Global.Direction.IDLE : "idle",
+}
+
+const dir_to_anim_hit = {
+	Global.Direction.UP : "hit_left",
+	Global.Direction.RIGHT : "hit_left",
+	Global.Direction.DOWN : "hit_left",
+	Global.Direction.LEFT : "hit_left",
+	Global.Direction.IDLE : "hit_left",
 }
 
 # Called when the node enters the scene tree for the first time.
@@ -80,12 +89,25 @@ func my_process(delta):
 			assert(false)
 	Collisions.compute_next_pos(self, nearby_characters, desired_direction, SPEED_MAX, MASS, delta)
 	
+	max_dpos_length = delta * SPEED_MAX
+	update_animation()
+
+func update_animation():
 	# set animation
 	var dpos = curr_position - last_position
 	var curr_direction = Global.dpos_to_dir(dpos)
-	var max_dpos_length = delta * SPEED_MAX
-	animated_sprite.speed_scale = dpos.length() / max_dpos_length
-	animated_sprite.play(dir_to_anim[curr_direction])
+	match action_state:
+		ActionState.IDLE:
+			animated_sprite.play(dir_to_anim_walk[curr_direction])
+			if max_dpos_length == 0:
+				animated_sprite.speed_scale = 1
+			else:
+				animated_sprite.speed_scale = dpos.length() / max_dpos_length
+		ActionState.HITTING:
+			animated_sprite.speed_scale = 1
+			animated_sprite.play(dir_to_anim_hit[curr_direction])			
+		_:
+			assert(false)
 
 func set_state(o_state):
 	state = o_state
@@ -98,6 +120,8 @@ func set_state(o_state):
 			pass
 		_:
 			assert(false)
+	
+	update_animation()
 
 func set_action_state(o_state):
 	action_state = o_state
