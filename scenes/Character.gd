@@ -24,16 +24,19 @@ var action_state = ActionState.IDLE
 var path_offset
 var nearby_characters = []
 var desired_direction = Vector2(0, 0)
-var curr_position
-var last_position = Vector2(0,0)
+var curr_body_position
+var last_body_position = Vector2(0,0)
+var curr_render_position
+var last_render_position = Vector2(0,0)
 var hp
 var hp_max
 var max_dpos_length = 1
 
 onready var body = $KinematicBody2D
 onready var hit_timer = $HitTimer
-onready var hp_bar = $KinematicBody2D/HpBar
-onready var animated_sprite : AnimatedSprite = body.get_node("AnimatedSprite")
+onready var render_node = $Render
+onready var hp_bar : ProgressBar = render_node.get_node("HpBar")
+onready var animated_sprite : AnimatedSprite = render_node.get_node("AnimatedSprite")
 
 const dir_to_anim_walk = {
 	Global.Direction.UP : "walk_up",
@@ -54,8 +57,8 @@ const dir_to_anim_hit = {
 # Called when the node enters the scene tree for the first time.
 func _ready():
 	body.position = position
-	curr_position = position
-	last_position = position
+	curr_body_position = position
+	last_body_position = position
 	position = Vector2(0,0)
 	animated_sprite.play("walk_down")
 	hp_bar.visible = false
@@ -66,8 +69,8 @@ func _process(delta):
 func my_process(delta):
 	var path = $Path2D
 	var path_follow = $Path2D/PathFollow2D
-	last_position = curr_position
-	curr_position = body.position
+	last_render_position = curr_render_position
+	curr_render_position = render_node.position
 	var new_position
 	var new_path_offset
 	var baked_length
@@ -75,7 +78,7 @@ func my_process(delta):
 		State.IDLE:
 			pass
 		State.FOLLOW_PATH:
-			new_path_offset = path.curve.get_closest_offset(curr_position)
+			new_path_offset = path.curve.get_closest_offset(curr_body_position)
 			new_path_offset += delta * SPEED_MAX
 			baked_length = path.curve.get_baked_length()
 			if new_path_offset > baked_length:
@@ -84,17 +87,23 @@ func my_process(delta):
 				path_offset = new_path_offset
 				path_follow.set_offset(path_offset)
 				new_position = path_follow.get_position()
-				desired_direction = (new_position - curr_position).normalized()
+				desired_direction = (new_position - curr_body_position).normalized()
 		_:
 			assert(false)
-	Collisions.compute_next_pos(self, nearby_characters, desired_direction, SPEED_MAX, MASS, delta)
 	
 	max_dpos_length = delta * SPEED_MAX
 	update_animation()
 
+func _physics_process(delta):
+	curr_body_position = body.position
+	Collisions.compute_next_pos(self, nearby_characters, desired_direction, SPEED_MAX, MASS, delta)
+	last_body_position = curr_body_position
+	curr_body_position = body.position
+	render_node.position = body.position.round()
+
 func update_animation():
 	# set animation
-	var dpos = curr_position - last_position
+	var dpos = curr_body_position - last_body_position
 	var curr_direction = Global.dpos_to_dir(dpos)
 	match action_state:
 		ActionState.IDLE:

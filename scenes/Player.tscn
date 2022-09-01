@@ -40,21 +40,6 @@ flags = 4
 atlas = ExtResource( 4 )
 region = Rect2( 320, 0, 64, 64 )
 
-[sub_resource type="AtlasTexture" id=7]
-flags = 4
-atlas = ExtResource( 3 )
-region = Rect2( 0, 96, 48, 48 )
-
-[sub_resource type="AtlasTexture" id=8]
-flags = 4
-atlas = ExtResource( 3 )
-region = Rect2( 48, 96, 48, 48 )
-
-[sub_resource type="AtlasTexture" id=9]
-flags = 4
-atlas = ExtResource( 3 )
-region = Rect2( 96, 96, 48, 48 )
-
 [sub_resource type="AtlasTexture" id=1]
 flags = 4
 atlas = ExtResource( 3 )
@@ -85,6 +70,21 @@ flags = 4
 atlas = ExtResource( 3 )
 region = Rect2( 96, 0, 48, 48 )
 
+[sub_resource type="AtlasTexture" id=7]
+flags = 4
+atlas = ExtResource( 3 )
+region = Rect2( 0, 96, 48, 48 )
+
+[sub_resource type="AtlasTexture" id=8]
+flags = 4
+atlas = ExtResource( 3 )
+region = Rect2( 48, 96, 48, 48 )
+
+[sub_resource type="AtlasTexture" id=9]
+flags = 4
+atlas = ExtResource( 3 )
+region = Rect2( 96, 96, 48, 48 )
+
 [sub_resource type="SpriteFrames" id=13]
 animations = [ {
 "frames": [ SubResource( 14 ) ],
@@ -102,11 +102,6 @@ animations = [ {
 "name": "hit_left",
 "speed": 5.0
 }, {
-"frames": [ SubResource( 7 ), SubResource( 8 ), SubResource( 9 ), SubResource( 8 ) ],
-"loop": true,
-"name": "walk_right",
-"speed": 5.0
-}, {
 "frames": [ SubResource( 1 ), SubResource( 2 ), SubResource( 3 ), SubResource( 2 ) ],
 "loop": true,
 "name": "walk_up",
@@ -116,6 +111,11 @@ animations = [ {
 "loop": true,
 "name": "walk_down",
 "speed": 5.0
+}, {
+"frames": [ SubResource( 7 ), SubResource( 8 ), SubResource( 9 ), SubResource( 8 ) ],
+"loop": true,
+"name": "walk_right",
+"speed": 5.0
 } ]
 
 [node name="Player" instance=ExtResource( 1 )]
@@ -124,11 +124,11 @@ script = ExtResource( 2 )
 [node name="Sprite" parent="KinematicBody2D" index="0"]
 visible = false
 
-[node name="AnimatedSprite" type="AnimatedSprite" parent="KinematicBody2D" index="3"]
+[node name="UpdatePath" type="Timer" parent="." index="2"]
+
+[node name="AnimatedSprite" type="AnimatedSprite" parent="Render" index="1"]
 position = Vector2( 0, -5 )
 frames = SubResource( 13 )
 animation = "hit_left"
-
-[node name="UpdatePath" type="Timer" parent="." index="2"]
 
 [connection signal="timeout" from="UpdatePath" to="." method="_on_UpdatePath_timeout"]
