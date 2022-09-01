@@ -17,6 +17,8 @@ enum CharacterType {
 	ENEMY,
 }
 
+const MIN_DPOS_TO_RENDER = 3 # this is a trick to get rid off wiggly characters eg when they are stuck against a wall
+
 var SPEED_MAX = 2 * Global.DYNAMICS_FACTOR
 var MASS = 1
 var state = State.IDLE
@@ -26,11 +28,11 @@ var nearby_characters = []
 var desired_direction = Vector2(0, 0)
 var curr_body_position
 var last_body_position = Vector2(0,0)
-var curr_render_position
-var last_render_position = Vector2(0,0)
+var last_render_positions = Global.Queue.new(2)
 var hp
 var hp_max
 var max_dpos_length = 1
+var can_update_animation_dir = true
 
 onready var body = $KinematicBody2D
 onready var hit_timer = $HitTimer
@@ -62,6 +64,8 @@ func _ready():
 	position = Vector2(0,0)
 	animated_sprite.play("walk_down")
 	hp_bar.visible = false
+	for idx in range(last_render_positions.max_size):
+		last_render_positions.push(Vector2.ZERO)
 
 func _process(delta):
 	my_process(delta)
@@ -69,8 +73,7 @@ func _process(delta):
 func my_process(delta):
 	var path = $Path2D
 	var path_follow = $Path2D/PathFollow2D
-	last_render_position = curr_render_position
-	curr_render_position = render_node.position
+	last_render_positions.push(render_node.position)
 	var new_position
 	var new_path_offset
 	var baked_length
@@ -99,7 +102,9 @@ func _physics_process(delta):
 	Collisions.compute_next_pos(self, nearby_characters, desired_direction, SPEED_MAX, MASS, delta)
 	last_body_position = curr_body_position
 	curr_body_position = body.position
-	render_node.position = body.position.round()
+	var tent_render_position = body.position.round()
+	if tent_render_position.distance_to((last_render_positions.get(-1) + last_render_positions.get(-2))/2) >= MIN_DPOS_TO_RENDER:
+		render_node.position = tent_render_position
 
 func update_animation():
 	# set animation
@@ -107,19 +112,27 @@ func update_animation():
 	var curr_direction = Global.dpos_to_dir(dpos)
 	match action_state:
 		ActionState.IDLE:
-			animated_sprite.play(dir_to_anim_walk[curr_direction])
+			try_to_play_animation(dir_to_anim_walk[curr_direction])
 			if max_dpos_length == 0:
 				animated_sprite.speed_scale = 1
 			else:
 				animated_sprite.speed_scale = dpos.length() / max_dpos_length
 		ActionState.HITTING:
 			animated_sprite.speed_scale = 1
-			animated_sprite.play(dir_to_anim_hit[curr_direction])			
+			try_to_play_animation(dir_to_anim_hit[curr_direction])
 		_:
 			assert(false)
 
+func try_to_play_animation(animation_name):
+	if (animation_name != animated_sprite.animation) and can_update_animation_dir:
+		animated_sprite.play(animation_name)
+		start_animation_timer()
+
 func set_state(o_state):
+	can_update_animation_dir = true
+	
 	state = o_state
+	
 	match state:
 		State.IDLE:
 			desired_direction = Vector2(0, 0)
@@ -156,6 +169,7 @@ func set_path(points : PoolVector2Array):
 	path_follow.loop = false
 	path_offset = 0
 	set_state(State.FOLLOW_PATH)
+	can_update_animation_dir = true
 
 func _on_RepulsionHitbox_area_entered(area):
 	var character = area.get_parent().get_parent()
@@ -172,3 +186,10 @@ func set_d_hp(d_hp):
 		hp_bar.visible = true
 	else:
 		hp_bar.visible = false
+
+func start_animation_timer():
+	can_update_animation_dir = false
+	$AnimationTimer.start()
+
+func _on_AnimationTimer_timeout():
+	can_update_animation_dir = true

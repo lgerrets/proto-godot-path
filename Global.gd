@@ -34,6 +34,22 @@ func dpos_to_dir(dpos):
 			return Direction.DOWN
 		else:
 			return Direction.UP
+
+class Queue:
+	var max_size
+	var arr = []
+
+	func _init(o_max_size):
+		max_size = o_max_size
+	
+	func push(val):
+		arr.append(val)
+		if len(arr) > max_size:
+			arr.pop_front()
+	
+	func get(idx):
+		return arr[idx]
+
 # Called when the node enters the scene tree for the first time.
 func _ready():
 	pass # Replace with function body.

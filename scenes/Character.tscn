@@ -55,6 +55,8 @@ shape = SubResource( 3 )
 
 [node name="HitTimer" type="Timer" parent="."]
 
+[node name="AnimationTimer" type="Timer" parent="."]
+
 [node name="Render" type="Node2D" parent="."]
 
 [node name="HpBar" type="ProgressBar" parent="Render"]
@@ -70,3 +72,4 @@ percent_visible = false
 
 [connection signal="area_entered" from="KinematicBody2D/RepulsionHitbox" to="." method="_on_RepulsionHitbox_area_entered"]
 [connection signal="area_exited" from="KinematicBody2D/RepulsionHitbox" to="." method="_on_RepulsionHitbox_area_exited"]
+[connection signal="timeout" from="AnimationTimer" to="." method="_on_AnimationTimer_timeout"]
