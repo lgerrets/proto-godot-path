@@ -43,10 +43,10 @@ position = Vector2( 488, 330 )
 position = Vector2( 719, 95 )
 
 [node name="Enemy2" parent="Enemies" instance=ExtResource( 4 )]
-position = Vector2( 474, 505 )
+position = Vector2( 262, 312 )
 
 [node name="Enemy3" parent="Enemies" instance=ExtResource( 4 )]
-position = Vector2( 264, 284 )
+position = Vector2( 734, 400 )
 
 [node name="Camera2D" type="Camera2D" parent="."]
 position = Vector2( 512, 300 )
@@ -87,5 +87,8 @@ margin_top = 39.0
 margin_right = 1026.0
 margin_bottom = 62.0
 text = "Invalid player path"
+
+[node name="MovePieceTimer" type="Timer" parent="."]
+wait_time = 0.4
 
 [connection signal="button_up" from="Camera2D/UI/Bg" to="." method="_on_Bg_button_up"]

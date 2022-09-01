@@ -35,6 +35,13 @@ func dpos_to_dir(dpos):
 		else:
 			return Direction.UP
 
+func mean_vectors(arr : Array):
+	var summed = Vector2.ZERO
+	for vec in arr:
+		summed += vec
+	var meaned = summed / len(arr)
+	return meaned
+
 class Queue:
 	var max_size
 	var arr = []

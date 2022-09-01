@@ -28,7 +28,7 @@ var nearby_characters = []
 var desired_direction = Vector2(0, 0)
 var curr_body_position
 var last_body_position = Vector2(0,0)
-var last_render_positions = Global.Queue.new(2)
+var last_render_positions = Global.Queue.new(10)
 var hp
 var hp_max
 var max_dpos_length = 1
@@ -103,7 +103,7 @@ func _physics_process(delta):
 	last_body_position = curr_body_position
 	curr_body_position = body.position
 	var tent_render_position = body.position.round()
-	if tent_render_position.distance_to((last_render_positions.get(-1) + last_render_positions.get(-2))/2) >= MIN_DPOS_TO_RENDER:
+	if tent_render_position.distance_to(Global.mean_vectors(last_render_positions.arr)) >= MIN_DPOS_TO_RENDER:
 		render_node.position = tent_render_position
 
 func update_animation():
@@ -149,9 +149,8 @@ func set_action_state(o_state):
 	action_state = o_state
 	match action_state:
 		ActionState.IDLE:
-			hit_timer.set_paused(true)
+			hit_timer.stop()
 		ActionState.HITTING:
-			hit_timer.set_paused(false)
 			hit_timer.start()
 		_:
 			assert(false)

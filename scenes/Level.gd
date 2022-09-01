@@ -11,6 +11,7 @@ const CAM_SPEED = 12
 
 var grid_segments = []
 var placing_piece = null
+var can_move_piece
 
 onready var debug_ui = $Camera2D/DebugUI
 onready var layout = $Layout
@@ -49,6 +50,7 @@ func _ready():
 func spawn_piece():
 	placing_piece = PieceMaker.create_piece()
 	layout.add_child(placing_piece)
+	can_move_piece = true
 
 class AstarNode:
 	var point_idx : int # index for AStar

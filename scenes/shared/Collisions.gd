@@ -27,6 +27,7 @@ func _compute_repulsion_force(node : Node, other_nodes : Array):
 		unit_direction = (collision_shape.global_position - other_collision_shape.global_position).normalized()
 		d2 = collision_shape.global_position.distance_to(other_collision_shape.global_position)
 		d2 += - collision_shape.shape.radius - other_collision_shape.shape.radius
+		d2 = max(0, d2)
 		d2 = pow(d2, 2)
 		force += unit_direction * coef / (0.000001 + d2)
 	return force
@@ -35,7 +36,8 @@ func compute_next_pos(node : Character, nearby_characters : Array, apply_directi
 	var desired_direction = apply_direction
 	var vel = desired_direction.normalized() * speed_max
 	var force = _compute_repulsion_force(node, node.nearby_characters) * Global.DYNAMICS_FACTOR
-	vel += delta * force / node.MASS
+	force *= delta / node.MASS
+	vel += force
 	var body = node.body
 	var d_pos = vel * delta
 	d_pos = d_pos.clamped(5) # fixes bodies clipping into one another or getting ejected
