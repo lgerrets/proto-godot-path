@@ -13,6 +13,14 @@ enum Direction {
 	IDLE,
 }
 
+const DIR_TO_DIR_NAME = {
+	Direction.UP: "up",
+	Direction.RIGHT: "right",
+	Direction.DOWN: "down",
+	Direction.LEFT: "left",
+	Direction.IDLE: "idle",
+}
+
 func logger(msg):
 	if LOG_LEVEL > 1:
 		print(msg)
@@ -34,6 +42,23 @@ func dpos_to_dir(dpos):
 			return Direction.DOWN
 		else:
 			return Direction.UP
+
+func dir_to_dpos(dir):
+	var ret
+	match dir:
+		Direction.UP:
+			ret = Vector2(0, -1)
+		Direction.RIGHT:
+			ret = Vector2(1, 0)
+		Direction.DOWN:
+			ret = Vector2(0, 1)
+		Direction.LEFT:
+			ret = Vector2(-1, 0)
+		Direction.IDLE:
+			ret = Vector2(0, 0)
+		_:
+			assert(false)
+	return ret
 
 func mean_vectors(arr : Array):
 	var summed = Vector2.ZERO

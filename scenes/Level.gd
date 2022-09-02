@@ -168,24 +168,18 @@ func does_circle_collide_during_motion(pos : Vector2, motion : Vector2, radius :
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta):
-	if Input.is_action_pressed("camera_right"):
-		$Camera2D.position.x += CAM_SPEED
-	if Input.is_action_pressed("camera_left"):
-		$Camera2D.position.x -= CAM_SPEED
-	if Input.is_action_pressed("camera_down"):
-		$Camera2D.position.y += CAM_SPEED
-	if Input.is_action_pressed("camera_up"):
-		$Camera2D.position.y -= CAM_SPEED
+	var dir_name
+	for dir in Global.DIR_TO_DIR_NAME:
+		dir_name = Global.DIR_TO_DIR_NAME[dir]
+		if Input.is_action_pressed("camera_" + dir_name):
+			$Camera2D.position += CAM_SPEED * Global.dir_to_dpos(dir)
 	
-	if placing_piece != null:
-		if Input.is_action_pressed("piece_right"):
-			placing_piece.position.x += placing_piece.tile_w
-		if Input.is_action_pressed("piece_left"):
-			placing_piece.position.x -= placing_piece.tile_w
-		if Input.is_action_pressed("piece_down"):
-			placing_piece.position.y += placing_piece.tile_h
-		if Input.is_action_pressed("piece_up"):
-			placing_piece.position.y -= placing_piece.tile_h
+		if placing_piece != null:
+			if Input.is_action_just_pressed("piece_" + dir_name) or (
+			can_move_piece and Input.is_action_pressed("piece_" + dir_name)):
+				placing_piece.position += Global.dir_to_dpos(dir) * Vector2(placing_piece.tile_w, placing_piece.tile_h)
+				start_move_piece_timer()
+			
 	
 	if Global.DEBUG:
 		var x = debug_ui.get_node("TextEdit").text
@@ -276,3 +270,9 @@ func _draw():
 
 
 		
+func start_move_piece_timer():
+	can_move_piece = false
+	$MovePieceTimer.start()
+
+func _on_MovePieceTimer_timeout():
+	can_move_piece = true

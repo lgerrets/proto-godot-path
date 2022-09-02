@@ -92,3 +92,4 @@ text = "Invalid player path"
 wait_time = 0.4
 
 [connection signal="button_up" from="Camera2D/UI/Bg" to="." method="_on_Bg_button_up"]
+[connection signal="timeout" from="MovePieceTimer" to="." method="_on_MovePieceTimer_timeout"]
