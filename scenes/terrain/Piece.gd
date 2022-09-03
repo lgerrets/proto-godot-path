@@ -10,6 +10,9 @@ var tile_h
 func _ready():
 	pass # Replace with function body.
 
+func get_tiles() -> Array:
+	return $Tiles.get_children()
+
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 #func _process(delta):

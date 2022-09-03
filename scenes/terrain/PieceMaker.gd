@@ -7,22 +7,21 @@ const WallScene = preload("res://scenes/Wall.tscn")
 const tile_rows = 7
 const tile_cols = 7
 
+var tile_w
+var tile_h
+
 enum Shape {
 	O,
 	L,
 }
 
 static func create_piece() -> Node2D:
-	var rect_shape = PieceTileScene.instance().get_node("Sprite").get_rect().size
-	var tile_w = rect_shape.x * tile_cols
-	var tile_h = rect_shape.y * tile_rows
-
 	var piece = PieceScene.instance()
 	var tiles = piece.get_node("Tiles")
 	var shape = randi() % len(Shape)
 	piece.shape = shape
-	piece.tile_w = tile_w
-	piece.tile_h = tile_h
+	piece.tile_w = PieceMaker.tile_w
+	piece.tile_h = PieceMaker.tile_h
 	var relative_positions
 	match shape:
 		Shape.L:
@@ -44,14 +43,15 @@ static func create_piece() -> Node2D:
 	var tile
 	for relative_position in relative_positions:
 		tile = PieceTileScene.instance()
-		tile.get_node("Sprite").scale.x = tile_cols
-		tile.get_node("Sprite").scale.y = tile_rows
-		tile.position.x = tile_w * relative_position[0]
-		tile.position.y = tile_h * relative_position[1]
+		var tile_scale = tile.get_node("ToRescale").scale
+		tile_scale.x = tile_cols
+		tile_scale.y = tile_rows
+		tile.position.x = PieceMaker.tile_w * relative_position[0]
+		tile.position.y = PieceMaker.tile_h * relative_position[1]
 		if randf() < 0.5:
 			var wall = WallScene.instance()
-			wall.position.x = tile_w * int(tile_cols / 2) / tile_cols
-			wall.position.y = tile_h * int(tile_rows / 2) / tile_rows
+			wall.position.x = PieceMaker.tile_w * int(tile_cols / 2) / tile_cols
+			wall.position.y = PieceMaker.tile_h * int(tile_rows / 2) / tile_rows
 			tile.add_child(wall)
 		tiles.add_child(tile)
 	
@@ -60,7 +60,10 @@ static func create_piece() -> Node2D:
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
-	pass
+	var rect_shape = PieceTileScene.instance().get_node("Sprite").get_rect().size
+	tile_w = rect_shape.x * tile_cols
+	tile_h = rect_shape.y * tile_rows
+
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 #func _process(delta):

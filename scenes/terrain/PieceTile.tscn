@@ -4,7 +4,9 @@
 
 [node name="PieceTile" type="Node2D"]
 
-[node name="Sprite" type="Sprite" parent="."]
+[node name="ToRescale" type="Node2D" parent="."]
+
+[node name="Sprite" type="Sprite" parent="ToRescale"]
 z_index = -10
 texture = ExtResource( 1 )
 centered = false

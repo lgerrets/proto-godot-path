@@ -12,13 +12,14 @@ const CAM_SPEED = 12
 var grid_segments = []
 var placing_piece = null
 var can_move_piece
+var max_radius = 0
 
 onready var debug_ui = $Camera2D/DebugUI
 onready var layout = $Layout
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
-	var max_radius = 0
+	max_radius = 0
 	var temp_radius
 	for character in [example_player, example_enemy]:
 		if character != null:
@@ -26,12 +27,6 @@ func _ready():
 			max_radius = max(temp_radius, max_radius)
 	
 	a_star = AStar2D.new()
-	var prev_line_idxes = null
-	var n_points = Vector2(
-		int($Layout/End.position.x - $Layout/Start.position.x) / GRID_RES,
-		int($Layout/End.position.y - $Layout/Start.position.y) / GRID_RES
-	)
-	build_astar($Layout/Start.global_position, n_points, max_radius)
 		
 	$Player.connect("update_path", self, "update_player_path")
 	
@@ -51,6 +46,23 @@ func spawn_piece():
 	placing_piece = PieceMaker.create_piece()
 	layout.add_child(placing_piece)
 	can_move_piece = true
+
+func try_place_piece():
+#	can place ?
+#	    is it first piece OR next to a piece
+#	fill astar
+#	    for each tile
+#	        create one point per quadrant of the tile and add them all to open list
+#	        fill astar algo
+#	            if point is at the edge, put it in tile.borders
+#	    for each tile
+#	        connect borders to neighboor's borders
+	var tiles = placing_piece.get_tiles()
+	var start
+	for tile in tiles:
+		start = placing_piece.position + tile.position
+		build_astar(start, n_points, max_radius, start_points)
+	
 
 class AstarNode:
 	var point_idx : int # index for AStar
@@ -74,14 +86,16 @@ class AstarNode:
 			ret.point_idx = grid_pos.x + grid_pos.y * n_points.x
 		return ret
 
-func build_astar(start : Vector2, n_points : Vector2, max_radius : float):
+func build_astar(start : Vector2, n_points : Vector2, max_radius : float, init_opens : Array):
 	var start_point_idx = a_star_max_point_id
 	assert(a_star_max_point_id >= a_star.get_available_point_id()) # we should assert that it's above any point id
-	var curr_node = AstarNode.point_if_in_bounds(Vector2(0,0), start, n_points)
-	assert(curr_node != null)
-	a_star.add_point(curr_node.point_idx, curr_node.point, 1.0)
 	var closed_list = {}
-	var open_list = {curr_node.point_idx : curr_node}
+	var open_list = {}
+	for init_open in init_opens:
+		var curr_node = AstarNode.point_if_in_bounds(init_open, start, n_points)
+		assert(curr_node != null)
+		a_star.add_point(curr_node.point_idx, curr_node.point, 1.0)
+		open_list[curr_node.point_idx] = curr_node
 	var neigh
 	while len(open_list) > 0:
 		var curr_node_idx = open_list.keys()[0]

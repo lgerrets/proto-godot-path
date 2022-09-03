@@ -20,3 +20,9 @@
     - now that we do not add all points, some points are missed
     - player's path should be updated eg once every sec
 - in 105344c6030d099ea53bf25cdc8f6843c2ae2b57: not really a bug, but 2+ enemies + 1 wall may stuck one another depending on where they want to go
+
+## WIP
+
+rm level button that catches move event
+    add a button on each tile which emits the signal for level to catch
+
