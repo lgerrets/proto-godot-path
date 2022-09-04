@@ -60,6 +60,18 @@ func dir_to_dpos(dir):
 			assert(false)
 	return ret
 
+func create_array(length : int, value) -> Array:
+	var arr = []
+	for idx in range(length):
+		arr.append(value)
+	return arr
+
+func create_array_2d(size : Vector2, value) -> Array:
+	var arr = []
+	for idx in range(size.y):
+		arr.append(create_array(size.x, value))
+	return arr
+
 func mean_vectors(arr : Array):
 	var summed = Vector2.ZERO
 	for vec in arr:

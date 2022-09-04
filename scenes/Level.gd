@@ -17,6 +17,14 @@ var max_radius = 0
 onready var debug_ui = $Camera2D/DebugUI
 onready var layout = $Layout
 
+enum GridCell {
+	EMPTY,
+	TILE,
+}
+
+var layout_grid_types = Global.create_array_2d(Vector2(5, 10), GridCell.EMPTY)
+var layout_grid_objs = Global.create_array_2d(Vector2(5, 10), null)
+
 # Called when the node enters the scene tree for the first time.
 func _ready():
 	max_radius = 0
@@ -57,17 +65,84 @@ func try_place_piece():
 #	            if point is at the edge, put it in tile.borders
 #	    for each tile
 #	        connect borders to neighboor's borders
+	# TODO : check that the piece can be placed
+
 	var tiles = placing_piece.get_tiles()
 	var start
+	var n_points = Vector2(int(PieceMaker.tile_w / GRID_RES), int(PieceMaker.tile_h / GRID_RES))
+	var quarter_x = int(PieceMaker.tile_w / GRID_RES / 4)
+	var quarter_y = int(PieceMaker.tile_h / GRID_RES / 4)
+	var start_points = [
+		Vector2(quarter_x, quarter_y),
+		Vector2(quarter_x, n_points.y - quarter_y),
+		Vector2(n_points.x - quarter_x, quarter_y),
+		Vector2(n_points.x - quarter_x, n_points.y - quarter_y),
+	]
+	var closed_list
 	for tile in tiles:
 		start = placing_piece.position + tile.position
-		build_astar(start, n_points, max_radius, start_points)
-	
+		closed_list = build_astar(start, n_points, max_radius, start_points)
+
+		# init borders with lists of null
+		for direction in [
+			Global.Direction.UP,
+			Global.Direction.DOWN,
+		]:
+			tile.astar_nodes_on_borders[direction] = Global.create_array(n_points.y, null)
+		for direction in [
+			Global.Direction.RIGHT,
+			Global.Direction.LEFT,
+		]:
+			tile.astar_nodes_on_borders[direction] = Global.create_array(n_points.x, null)
+
+		# fill borders with nodes ; afterwards, points that were not reached through astar will be marked by null in those lists
+		var node
+		for node_idx in closed_list:
+			node = closed_list[node_idx]
+			if node.grid_pos.y == 0:
+				tile.astar_nodes_on_borders[Global.Direction.UP][node.grid_pos.x] = node
+			elif node.grid_pos.y == n_points.y - 1:
+				tile.astar_nodes_on_borders[Global.Direction.DOWN][node.grid_pos.x] = node
+			if node.grid_pos.x == 0:
+				tile.astar_nodes_on_borders[Global.Direction.LEFT][node.grid_pos.y] = node
+			elif node.grid_pos.x == n_points.x - 1:
+				tile.astar_nodes_on_borders[Global.Direction.RIGHT][node.grid_pos.y] = node
+		
+	# connect neighboor tiles
+	var opp_direction
+	var tile_grid_pos
+	var other_tile
+	var node
+	var other_node
+	for tile in tiles:
+		tile_grid_pos = placing_piece.grid_pos + tile.relative_grid_pos
+		for direction in [
+			Global.Direction.UP,
+			Global.Direction.DOWN,
+			Global.Direction.RIGHT,
+			Global.Direction.LEFT,
+		]:
+			if layout_grid_types[tile_grid_pos.y][tile_grid_pos.x] == GridCell.TILE:
+				opp_direction = Global.dpos_to_dir(- Global.dir_to_dpos(direction))
+				other_tile = layout_grid_objs[tile_grid_pos.y][tile_grid_pos.x]
+				assert(len(tile.astar_nodes_on_borders[direction]) == len(other_tile.astar_nodes_on_borders[opp_direction]))
+				for idx in range(len(tile.astar_nodes_on_borders[direction])):
+					node = tile.astar_nodes_on_borders[direction][idx]
+					other_node = other_tile.astar_nodes_on_borders[opp_direction][idx]
+					if (node != null) and (other_node != null) and not does_circle_collide_during_motion(node.point, other_node.point - node.point, max_radius):
+						a_star.connect_points(node.point_idx, other_node.point_idx)
+						if Global.DEBUG:
+							grid_segments.append([node.point_idx, other_node.point_idx])
 
 class AstarNode:
-	var point_idx : int # index for AStar
+	var point_idx : int # unique node index for one batch of extending the graph in build_astar
 	var grid_pos : Vector2 # coordinates in the grid (eg column x row y)
 	var point : Vector2 # classic 2D coordinates, as in global_position
+	var astar_idx : int
+	
+	func confirm_instanciation(a_star):
+		astar_idx = a_star.get_available_point_id()
+		a_star.add_point(astar_idx, point, 1.0)
 	
 	static func point_if_in_bounds(grid_pos : Vector2, start : Vector2, n_points : Vector2):
 		var valid = true
@@ -91,10 +166,11 @@ func build_astar(start : Vector2, n_points : Vector2, max_radius : float, init_o
 	assert(a_star_max_point_id >= a_star.get_available_point_id()) # we should assert that it's above any point id
 	var closed_list = {}
 	var open_list = {}
+	var curr_node
 	for init_open in init_opens:
-		var curr_node = AstarNode.point_if_in_bounds(init_open, start, n_points)
+		curr_node = AstarNode.point_if_in_bounds(init_open, start, n_points)
 		assert(curr_node != null)
-		a_star.add_point(curr_node.point_idx, curr_node.point, 1.0)
+		curr_node.confirm_instanciation(a_star)
 		open_list[curr_node.point_idx] = curr_node
 	var neigh
 	while len(open_list) > 0:
@@ -108,16 +184,19 @@ func build_astar(start : Vector2, n_points : Vector2, max_radius : float, init_o
 			if not does_circle_collide_during_motion(curr_node.point, delta * GRID_RES, max_radius):
 				neigh = AstarNode.point_if_in_bounds(curr_node.grid_pos + delta, start, n_points)
 				if (neigh != null):
-					if not (neigh.point_idx in closed_list) and not (neigh.point_idx in open_list):
-						open_list[neigh.point_idx] = neigh
-						a_star.add_point(neigh.point_idx, neigh.point, 1.0)
-					if curr_node.point_idx == 0:
-						pass
-					a_star.connect_points(curr_node.point_idx, neigh.point_idx)
-					grid_segments.append([curr_node.point_idx, neigh.point_idx])
+					if not (neigh.point_idx in closed_list):
+						if neigh.point_idx in open_list:
+							neigh = open_list[neigh.point_idx]
+						else:
+							open_list[neigh.point_idx] = neigh
+							neigh.confirm_instanciation(a_star)
+						a_star.connect_points(curr_node.astar_idx, neigh.astar_idx)
+						if Global.DEBUG:
+							grid_segments.append([curr_node.astar_idx, neigh.astar_idx])
 		open_list.erase(curr_node_idx)
 		closed_list[curr_node_idx] = curr_node
 	a_star_max_point_id += n_points.x * n_points.y
+	return closed_list
 	
 	
 func spawn_enemies():
@@ -184,6 +263,8 @@ func does_circle_collide_during_motion(pos : Vector2, motion : Vector2, radius :
 func _process(delta):
 	var dir_name
 	for dir in Global.DIR_TO_DIR_NAME:
+		if dir == Global.Direction.IDLE:
+			continue
 		dir_name = Global.DIR_TO_DIR_NAME[dir]
 		if Input.is_action_pressed("camera_" + dir_name):
 			$Camera2D.position += CAM_SPEED * Global.dir_to_dpos(dir)
@@ -191,9 +272,13 @@ func _process(delta):
 		if placing_piece != null:
 			if Input.is_action_just_pressed("piece_" + dir_name) or (
 			can_move_piece and Input.is_action_pressed("piece_" + dir_name)):
-				placing_piece.position += Global.dir_to_dpos(dir) * Vector2(placing_piece.tile_w, placing_piece.tile_h)
+				placing_piece.move(dir)
 				start_move_piece_timer()
 			
+	if placing_piece != null:
+		if Input.is_action_just_pressed("piece_place"):
+			try_place_piece()
+			spawn_piece()
 	
 	if Global.DEBUG:
 		var x = debug_ui.get_node("TextEdit").text
@@ -202,6 +287,8 @@ func _process(delta):
 		y = int(y)
 		debug_ui.get_node("Sprite").position.x = x
 		debug_ui.get_node("Sprite").position.y = y
+		if placing_piece != null:
+			debug_ui.get_node("PieceCoords").text = str(placing_piece.grid_pos)
 	
 func update_enemies_path():
 	for enemy in $Enemies.get_children():

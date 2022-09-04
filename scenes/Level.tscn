@@ -88,6 +88,14 @@ margin_right = 1026.0
 margin_bottom = 62.0
 text = "Invalid player path"
 
+[node name="PieceCoords" type="RichTextLabel" parent="Camera2D/DebugUI"]
+self_modulate = Color( 1, 0, 0, 1 )
+margin_left = 899.0
+margin_top = 54.0
+margin_right = 1026.0
+margin_bottom = 77.0
+text = "Invalid player path"
+
 [node name="MovePieceTimer" type="Timer" parent="."]
 wait_time = 0.4
 
